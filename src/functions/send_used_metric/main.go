@@ -16,6 +16,7 @@ import (
 	"github.com/aws/aws-sdk-go/service/s3"
 )
 
+// HandleRequest puts lastmodified to s3
 func HandleRequest(ctx context.Context) (string, error) {
 
 	var BUCKET = os.Getenv("BUCKET")
