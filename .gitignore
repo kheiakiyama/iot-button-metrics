@@ -29,3 +29,6 @@ terraform.tfvars
 
 # dep package
 vendor
+
+# builded files
+bin/*
