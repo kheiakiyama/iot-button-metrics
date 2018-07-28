@@ -1,6 +1,8 @@
 # iot-button-metrics
 iot-button-metrics is used for collecting metrics of toilet
 
+![structure](https://raw.githubusercontent.com/kheiakiyama/iot-button-metrics/images/images/20180728_AWS-IoT-Button_key.png)
+
 Output csv metrics to s3 bucket like below.
 
 ```
