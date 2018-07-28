@@ -26,4 +26,5 @@ After that, save metric `"0"`.
 2. Copy `terraform.tfvars.example` to `terraform.tfvars` and edit variables
 3. `sh build_function.sh`
 4. `terraform apply`
-5. Set [AWS IoT Button](https://aws.amazon.com/iotbutton) call `send_used_metric`. 
+5. Set [AWS IoT Button](https://aws.amazon.com/iotbutton) call `send_used_metric`.  
+Each buttons, set placement attribute `DEVICE=button1`,`DEVICE=button2`,`DEVICE=button3`...  

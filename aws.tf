@@ -10,6 +10,8 @@ variable "tags" {
   default = "iot-button-metrics"
 }
 
+variable "button_count" {}
+
 provider "aws" {
   access_key = "${var.aws_access_key}"
   secret_key = "${var.aws_secret_key}"

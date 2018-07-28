@@ -3,3 +3,5 @@ aws_access_key = "XXX"
 aws_secret_key = "XXXXXX"
 
 provier_name = "kheiakiyama"
+
+button_count = 1

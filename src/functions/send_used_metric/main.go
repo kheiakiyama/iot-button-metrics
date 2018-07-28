@@ -16,12 +16,26 @@ import (
 	"github.com/aws/aws-sdk-go/service/s3"
 )
 
+type MyAttribute struct {
+	DEVICE string `json:"DEVICE"`
+}
+
+type MyPlacementInfo struct {
+	Attributes MyAttribute `json:"attributes"`
+}
+
+type MyEvent struct {
+	PlacementInfo MyPlacementInfo `json:"placementInfo"`
+}
+
 // HandleRequest puts lastmodified to s3
-func HandleRequest(ctx context.Context) (string, error) {
-
+func HandleRequest(ctx context.Context, event MyEvent) (string, error) {
+	log.Print(event)
 	var BUCKET = os.Getenv("BUCKET")
-	var KEY = os.Getenv("KEY")
-
+	var keyPrefix = os.Getenv("KEY_PREFIX")
+	var DEVICE = event.PlacementInfo.Attributes.DEVICE
+	var key = *aws.String(keyPrefix) + "/" + *aws.String(DEVICE)
+	log.Print(key)
 	svc := s3.New(session.New(), &aws.Config{
 		Region: aws.String(endpoints.ApNortheast1RegionID),
 	})
@@ -29,7 +43,7 @@ func HandleRequest(ctx context.Context) (string, error) {
 	// ファイルの存在確認
 	loo, errlo := svc.ListObjectsV2(&s3.ListObjectsV2Input{
 		Bucket: aws.String(BUCKET),
-		Prefix: aws.String(KEY),
+		Prefix: &key,
 	})
 
 	if errlo != nil {
@@ -54,7 +68,7 @@ func HandleRequest(ctx context.Context) (string, error) {
 		// ファイル削除
 		_, errdo := svc.DeleteObject(&s3.DeleteObjectInput{
 			Bucket: aws.String(BUCKET),
-			Key:    aws.String(KEY),
+			Key:    &key,
 		})
 		if errdo != nil {
 			if aerr, ok := errdo.(awserr.Error); ok {
@@ -81,7 +95,7 @@ func HandleRequest(ctx context.Context) (string, error) {
 	_, errpo := svc.PutObject(&s3.PutObjectInput{
 		Body:                 bytes.NewReader(wb.Bytes()),
 		Bucket:               aws.String(BUCKET),
-		Key:                  aws.String(KEY),
+		Key:                  &key,
 		ACL:                  aws.String("private"),
 		ServerSideEncryption: aws.String("AES256"),
 	})

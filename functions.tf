@@ -62,8 +62,8 @@ resource "aws_lambda_function" "send_used_metric" {
 
   environment {
     variables = {
-      BUCKET = "${var.tags}-${var.provier_name}"
-      KEY    = "button_clicked"
+      BUCKET     = "${var.tags}-${var.provier_name}"
+      KEY_PREFIX = "button_clicked"
     }
   }
 
@@ -83,10 +83,12 @@ resource "aws_lambda_function" "send_scheduled_metric" {
 
   environment {
     variables = {
-      BUCKET           = "${var.tags}-${var.provier_name}"
-      KEY              = "metrics"
-      LASTMODIFIED_KEY = "button_clicked"
-      TIMEOUT          = "300"
+      BUCKET                  = "${var.tags}-${var.provier_name}"
+      KEY_PRIFIX              = "metrics"
+      LASTMODIFIED_KEY_PRIFIX = "button_clicked"
+      TIMEOUT                 = "300"
+      BUTTON_COUNT            = "${var.button_count}"
+      BUTTON_PREFIX           = "button"
     }
   }
 
