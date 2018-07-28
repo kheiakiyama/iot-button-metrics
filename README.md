@@ -1,7 +1,7 @@
 # iot-button-metrics
 iot-button-metrics is used for collecting metrics of toilet
 
-Output csv metrics like below.
+Output csv metrics to s3 bucket like below.
 
 ```
 "2018/07/28 12:12:30",0
