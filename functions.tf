@@ -66,6 +66,11 @@ resource "aws_lambda_function" "send_used_metric" {
       KEY    = "button_clicked"
     }
   }
+
+  tags {
+    Name        = "${var.tags}"
+    Environment = "Production"
+  }
 }
 
 resource "aws_lambda_function" "send_scheduled_metric" {
@@ -83,6 +88,11 @@ resource "aws_lambda_function" "send_scheduled_metric" {
       LASTMODIFIED_KEY = "button_clicked"
       TIMEOUT          = "300"
     }
+  }
+
+  tags {
+    Name        = "${var.tags}"
+    Environment = "Production"
   }
 }
 
