@@ -35,7 +35,8 @@ resource "aws_iam_role_policy" "iot_button_metrics" {
        "Effect": "Allow",
        "Action": [
          "s3:PutObject",
-         "s3:GetObject"
+         "s3:GetObject",
+         "s3:DeleteObject"
        ],
        "Resource": ["${aws_s3_bucket.metrics.arn}/*"]
      }

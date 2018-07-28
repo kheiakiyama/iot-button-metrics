@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"log"
 	"os"
+	"time"
 
 	"github.com/aws/aws-lambda-go/lambda"
 	"github.com/aws/aws-sdk-go/aws"
@@ -48,45 +49,33 @@ func HandleRequest(ctx context.Context) (string, error) {
 
 	wb := new(bytes.Buffer) // write buffer
 
-	if *loo.KeyCount == 0 {
-		// 新規作成
-		fmt.Fprint(wb, "header1,header2,header3\n") // ヘッダー
-	} else {
-		// Object取得
-		goo, errgo := svc.GetObject(&s3.GetObjectInput{
+	if *loo.KeyCount > 0 {
+		// ファイル削除
+		_, errdo := svc.DeleteObject(&s3.DeleteObjectInput{
 			Bucket: aws.String(BUCKET),
 			Key:    aws.String(KEY),
 		})
-		defer goo.Body.Close()
-		if errgo != nil {
-			if aerr, ok := errgo.(awserr.Error); ok {
+		if errdo != nil {
+			if aerr, ok := errdo.(awserr.Error); ok {
 
 				switch aerr.Code() {
 				case s3.ErrCodeNoSuchBucket:
-					log.Print("bucket does not exist at GetObject")
-					return "bucket does not exist at GetObject", aerr
-
-				case s3.ErrCodeNoSuchKey:
-					// 新規作成
-					log.Print("object with key does not exist in bucket at GetObject")
-					return "object with key does not exist in bucket at GetObject", aerr
+					log.Print("bucket does not exist at DeleteObject")
+					return "bucket does not exis at DeleteObject", aerr
 				default:
-					log.Printf("aws error %v at GetObject", aerr.Error())
-					return "aws error at GetObject", aerr
+					log.Printf("aws error %v at DeleteObject", aerr.Error())
+					return "aws error at DeleteObject", aerr
 				}
 			}
-			log.Printf("error %v at GetObject", errgo.Error())
-			return "error at GetObject", errgo
+			log.Printf("error %v at DeleteObject", errlo.Error())
+			return "error at DeleteObject", errlo
 		}
-
-		brb := new(bytes.Buffer) // buffer Response Body
-		brb.ReadFrom(goo.Body)
-		srb := brb.String() // string Response Body
-
-		fmt.Fprint(wb, srb) // 読み取りデータ
 	}
 
-	fmt.Fprint(wb, "col1,col2,col3\n") // 追記データ
+	// 新規作成
+	t := time.Now()
+	fmt.Fprint(wb, t.Unix())
+	fmt.Fprint(wb, t.Format("\n2006-01-02 15:04:05"))
 
 	_, errpo := svc.PutObject(&s3.PutObjectInput{
 		Body:                 bytes.NewReader(wb.Bytes()),
