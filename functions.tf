@@ -39,6 +39,13 @@ resource "aws_iam_role_policy" "iot_button_metrics" {
          "s3:DeleteObject"
        ],
        "Resource": ["${aws_s3_bucket.metrics.arn}/*"]
+     },
+     {
+       "Effect": "Allow",
+       "Action": [
+         "logs:*"        
+       ],
+       "Resource": "arn:aws:logs:*:*:*"
      }
   ]
 }
@@ -57,6 +64,24 @@ resource "aws_lambda_function" "send_used_metric" {
     variables = {
       BUCKET = "${var.tags}-${var.provier_name}"
       KEY    = "button_clicked"
+    }
+  }
+}
+
+resource "aws_lambda_function" "send_scheduled_metric" {
+  filename         = "bin/send_scheduled_metric.zip"
+  function_name    = "send_scheduled_metric"
+  role             = "${aws_iam_role.iot_button_metrics.arn}"
+  handler          = "bin/send_scheduled_metric"
+  source_code_hash = "${base64sha256(file("bin/send_scheduled_metric.zip"))}"
+  runtime          = "go1.x"
+
+  environment {
+    variables = {
+      BUCKET           = "${var.tags}-${var.provier_name}"
+      KEY              = "metrics"
+      LASTMODIFIED_KEY = "button_clicked"
+      TIMEOUT          = "300"
     }
   }
 }
