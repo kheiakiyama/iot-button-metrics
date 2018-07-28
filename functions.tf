@@ -85,3 +85,23 @@ resource "aws_lambda_function" "send_scheduled_metric" {
     }
   }
 }
+
+resource "aws_cloudwatch_event_rule" "every_month" {
+  name                = "every_minute"
+  description         = "Fires every minute"
+  schedule_expression = "cron(* * * * ? *)"
+}
+
+resource "aws_cloudwatch_event_target" "output_report_every_month" {
+  rule      = "${aws_cloudwatch_event_rule.every_month.name}"
+  target_id = "output_report"
+  arn       = "${aws_lambda_function.send_scheduled_metric.arn}"
+}
+
+resource "aws_lambda_permission" "allow_cloudwatch_to_call_output_report" {
+  statement_id  = "AllowExecutionFromCloudWatch"
+  action        = "lambda:InvokeFunction"
+  function_name = "${aws_lambda_function.send_scheduled_metric.function_name}"
+  principal     = "events.amazonaws.com"
+  source_arn    = "${aws_cloudwatch_event_rule.every_month.arn}"
+}

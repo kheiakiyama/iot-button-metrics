@@ -134,7 +134,7 @@ func HandleRequest(ctx context.Context) (string, error) {
 	if inTime {
 		inTimeVal = 1
 	}
-	fmt.Fprint(wb, t.Format("\n2006/01/02 15:04:05")+","+strconv.Itoa(inTimeVal))
+	fmt.Fprint(wb, t.Format("\n\"2006/01/02 15:04:05\"")+","+strconv.Itoa(inTimeVal))
 
 	_, errpo := svc.PutObject(&s3.PutObjectInput{
 		Body:                 bytes.NewReader(wb.Bytes()),
