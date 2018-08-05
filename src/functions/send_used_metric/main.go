@@ -32,9 +32,9 @@ type MyEvent struct {
 func HandleRequest(ctx context.Context, event MyEvent) (string, error) {
 	log.Print(event)
 	var BUCKET = os.Getenv("BUCKET")
-	var keyPrefix = os.Getenv("KEY_PREFIX")
+	var lastModifiedKeyPrifix = os.Getenv("LASTMODIFIED_KEY_PRIFIX")
 	var DEVICE = event.PlacementInfo.Attributes.DEVICE
-	var key = *aws.String(keyPrefix) + "/" + *aws.String(DEVICE)
+	var key = *aws.String(lastModifiedKeyPrifix) + "/" + *aws.String(DEVICE)
 	log.Print(key)
 	svc := s3.New(session.New(), &aws.Config{
 		Region: aws.String(endpoints.ApNortheast1RegionID),

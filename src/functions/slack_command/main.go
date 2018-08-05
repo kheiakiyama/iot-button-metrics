@@ -1,8 +1,8 @@
 package main
 
 import (
-	"bytes"
 	"context"
+	"errors"
 	"fmt"
 	"log"
 	"os"
@@ -16,13 +16,41 @@ import (
 	"github.com/aws/aws-sdk-go/aws/session"
 	"github.com/aws/aws-sdk-go/service/s3"
 	"github.com/kheiakiyama/iot-button-metrics/src/lib"
+	"github.com/nlopes/slack"
 )
 
-// HandleRequest puts metrics based lastmodified
-func HandleRequest(ctx context.Context) (string, error) {
+type SlashCommand struct {
+	Token          string `json:"token"`
+	TeamID         string `json:"team_id"`
+	TeamDomain     string `json:"team_domain"`
+	EnterpriseID   string `json:"enterprise_id,omitempty"`
+	EnterpriseName string `json:"enterprise_name,omitempty"`
+	ChannelID      string `json:"channel_id"`
+	ChannelName    string `json:"channel_name"`
+	UserID         string `json:"user_id"`
+	UserName       string `json:"user_name"`
+	Command        string `json:"command"`
+	Text           string `json:"text"`
+	ResponseURL    string `json:"response_url"`
+	TriggerID      string `json:"trigger_id"`
+}
 
+// HandleRequest puts metrics based lastmodified
+func HandleRequest(ctx context.Context, param SlashCommand) (string, error) {
+	var slackVerifiedToken = os.Getenv("SLACK_VERIFIED_TOKEN")
+	if slackVerifiedToken != param.Token {
+		return "", errors.New("Token Invalid")
+	}
+	switch param.Command {
+	default:
+		return DefaultCommand(ctx, param, slackVerifiedToken)
+	}
+}
+
+// DefaultCommand write recent summary uses
+func DefaultCommand(ctx context.Context, param SlashCommand, slackVerifiedToken string) (string, error) {
 	var BUCKET = os.Getenv("BUCKET")
-	var metricsKeyPrifix = os.Getenv("METRICS_KEY_PRIFIX")
+	var lastModifiedKeyPrifix = os.Getenv("LASTMODIFIED_KEY_PRIFIX")
 	var buttonPrifix = os.Getenv("BUTTON_PREFIX")
 	var buttonCount, _ = strconv.Atoi(os.Getenv("BUTTON_COUNT"))
 	var TIMEOUT, _ = strconv.ParseInt(os.Getenv("TIMEOUT"), 10, 64)
@@ -37,10 +65,10 @@ func HandleRequest(ctx context.Context) (string, error) {
 		return message, errlo
 	}
 
+	var usedCount = 0
 	for index := 1; index <= buttonCount; index++ {
-		var key = fmt.Sprintf("%s/%s%d", metricsKeyPrifix, buttonPrifix, index)
+		var key = fmt.Sprintf("%s/%s%d", lastModifiedKeyPrifix, buttonPrifix, index)
 		log.Print(key)
-		wb := new(bytes.Buffer) // write buffer
 
 		// Object取得
 		goo, errgo := svc.GetObject(&s3.GetObjectInput{
@@ -67,38 +95,17 @@ func HandleRequest(ctx context.Context) (string, error) {
 		}
 		if getSuccess {
 			defer goo.Body.Close()
-			brb := new(bytes.Buffer) // buffer Response Body
-			brb.ReadFrom(goo.Body)
-			srb := brb.String() // string Response Body
-
-			fmt.Fprint(wb, srb) // 読み取りデータ
 		}
 		t := time.Now()
 		inTime := (t.Unix() - lastClicked[fmt.Sprintf("%s%d", buttonPrifix, index)]) < TIMEOUT
-		inTimeVal := 0
 		if inTime {
-			inTimeVal = 1
-		}
-		fmt.Fprint(wb, t.Format("\n\"2006/01/02 15:04:05\"")+","+strconv.Itoa(inTimeVal))
-
-		_, errpo := svc.PutObject(&s3.PutObjectInput{
-			Body:                 bytes.NewReader(wb.Bytes()),
-			Bucket:               aws.String(BUCKET),
-			Key:                  &key,
-			ACL:                  aws.String("private"),
-			ServerSideEncryption: aws.String("AES256"),
-		})
-
-		if errpo != nil {
-			if aerr, ok := errpo.(awserr.Error); ok {
-				log.Printf("aws error %v at PutObject", aerr.Error())
-				return "aws error at PutObject", aerr
-			}
-			log.Printf("error %v at PutObject", errpo.Error())
-			return "error at PutObject", errpo
+			usedCount++
 		}
 	}
 	defer log.Print("normal end")
+	msg := fmt.Sprintf("%d used / %d all", usedCount, buttonCount)
+	api := slack.New(slackVerifiedToken)
+	api.PostMessage(param.ChannelID, msg, slack.PostMessageParameters{})
 	return "normal end", nil
 }
 

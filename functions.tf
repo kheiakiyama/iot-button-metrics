@@ -62,8 +62,8 @@ resource "aws_lambda_function" "send_used_metric" {
 
   environment {
     variables = {
-      BUCKET     = "${var.tags}-${var.provier_name}"
-      KEY_PREFIX = "button_clicked"
+      BUCKET                  = "${var.tags}-${var.provier_name}"
+      LASTMODIFIED_KEY_PRIFIX = "${var.lastmodified_key_prifix}"
     }
   }
 
@@ -84,11 +84,35 @@ resource "aws_lambda_function" "send_scheduled_metric" {
   environment {
     variables = {
       BUCKET                  = "${var.tags}-${var.provier_name}"
-      KEY_PRIFIX              = "metrics"
-      LASTMODIFIED_KEY_PRIFIX = "button_clicked"
-      TIMEOUT                 = "300"
+      METRICS_KEY_PRIFIX      = "${var.metrics_key_prifix}"
+      LASTMODIFIED_KEY_PRIFIX = "${var.lastmodified_key_prifix}"
+      TIMEOUT                 = "${var.timeout}"
       BUTTON_COUNT            = "${var.button_count}"
-      BUTTON_PREFIX           = "button"
+      BUTTON_PREFIX           = "${var.button_prefix}"
+    }
+  }
+
+  tags {
+    Name        = "${var.tags}"
+    Environment = "Production"
+  }
+}
+
+resource "aws_lambda_function" "slack_command" {
+  filename         = "bin/slack_command.zip"
+  function_name    = "slack_command"
+  role             = "${aws_iam_role.iot_button_metrics.arn}"
+  handler          = "bin/slack_command"
+  source_code_hash = "${base64sha256(file("bin/slack_command.zip"))}"
+  runtime          = "go1.x"
+
+  environment {
+    variables = {
+      BUCKET                  = "${var.tags}-${var.provier_name}"
+      LASTMODIFIED_KEY_PRIFIX = "${var.lastmodified_key_prifix}"
+      TIMEOUT                 = "${var.timeout}"
+      BUTTON_COUNT            = "${var.button_count}"
+      BUTTON_PREFIX           = "${var.button_prefix}"
     }
   }
 
