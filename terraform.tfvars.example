@@ -13,3 +13,5 @@ metrics_key_prifix = "metrics"
 button_prefix = "button"
 
 timeout = 300
+
+slack_verified_token = "XXXXXX"

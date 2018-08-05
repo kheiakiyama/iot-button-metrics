@@ -37,6 +37,7 @@ type SlashCommand struct {
 
 // HandleRequest puts metrics based lastmodified
 func HandleRequest(ctx context.Context, param SlashCommand) (string, error) {
+	log.Print(param)
 	var slackVerifiedToken = os.Getenv("SLACK_VERIFIED_TOKEN")
 	if slackVerifiedToken != param.Token {
 		return "", errors.New("Token Invalid")

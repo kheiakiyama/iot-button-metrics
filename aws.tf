@@ -11,6 +11,11 @@ variable "tags" {
 }
 
 variable "button_count" {}
+variable "lastmodified_key_prifix" {}
+variable "metrics_key_prifix" {}
+variable "button_prefix" {}
+variable "timeout" {}
+variable "slack_verified_token" {}
 
 provider "aws" {
   access_key = "${var.aws_access_key}"
