@@ -16,7 +16,6 @@ import (
 	"github.com/aws/aws-sdk-go/aws/session"
 	"github.com/aws/aws-sdk-go/service/s3"
 	"github.com/kheiakiyama/iot-button-metrics/src/lib"
-	"github.com/nlopes/slack"
 )
 
 type SlashCommand struct {
@@ -105,9 +104,8 @@ func DefaultCommand(ctx context.Context, param SlashCommand, slackVerifiedToken 
 	}
 	defer log.Print("normal end")
 	msg := fmt.Sprintf("%d used / %d all", usedCount, buttonCount)
-	api := slack.New(slackVerifiedToken)
-	api.PostMessage(param.ChannelID, msg, slack.PostMessageParameters{})
-	return "normal end", nil
+	defer log.Print(msg)
+	return msg, nil
 }
 
 func main() {

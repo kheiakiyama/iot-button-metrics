@@ -166,6 +166,10 @@ resource "aws_api_gateway_method_response" "slack_command_post" {
   http_method = "${aws_api_gateway_method.slack_command.http_method}"
   status_code = "200"
 
+  response_models {
+    "application/json" = "Empty"
+  }
+
   response_parameters {
     "method.response.header.Access-Control-Allow-Origin" = true
   }
@@ -252,6 +256,19 @@ resource "aws_api_gateway_integration" "slack_command_post" {
 }
 EOF
   }
+}
+
+resource "aws_api_gateway_integration_response" "slack_command_post" {
+  rest_api_id = "${aws_api_gateway_rest_api.slack_command.id}"
+  resource_id = "${aws_api_gateway_resource.slack_command.id}"
+  http_method = "${aws_api_gateway_method.slack_command.http_method}"
+  status_code = "${aws_api_gateway_method_response.slack_command_post.status_code}"
+
+  response_parameters = {
+    "method.response.header.Access-Control-Allow-Origin" = "'*'"
+  }
+
+  depends_on = ["aws_api_gateway_method_response.slack_command_post"]
 }
 
 resource "aws_api_gateway_method" "options_method" {
