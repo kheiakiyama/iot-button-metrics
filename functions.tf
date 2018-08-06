@@ -247,7 +247,7 @@ resource "aws_api_gateway_integration" "slack_command_post" {
   #else
     #set($itemDelimiter = "")
   #end
- "$kvTokenised[0]" : "$kvValue"$itemDelimiter
+ "$kvTokenised[0]" : "$util.urlDecode($kvValue)"$itemDelimiter
 #end
 }
 EOF
