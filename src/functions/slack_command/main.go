@@ -34,12 +34,16 @@ type SlashCommand struct {
 	TriggerID      string `json:"trigger_id"`
 }
 
+type SlashCommandResponse struct {
+	Text string `json:"text"`
+}
+
 // HandleRequest puts metrics based lastmodified
-func HandleRequest(ctx context.Context, param SlashCommand) (string, error) {
+func HandleRequest(ctx context.Context, param SlashCommand) (*SlashCommandResponse, error) {
 	log.Print(param)
 	var slackVerifiedToken = os.Getenv("SLACK_VERIFIED_TOKEN")
 	if slackVerifiedToken != param.Token {
-		return "", errors.New("Token Invalid")
+		return nil, errors.New("Token Invalid")
 	}
 	switch param.Command {
 	default:
@@ -48,7 +52,7 @@ func HandleRequest(ctx context.Context, param SlashCommand) (string, error) {
 }
 
 // DefaultCommand write recent summary uses
-func DefaultCommand(ctx context.Context, param SlashCommand, slackVerifiedToken string) (string, error) {
+func DefaultCommand(ctx context.Context, param SlashCommand, slackVerifiedToken string) (*SlashCommandResponse, error) {
 	var BUCKET = os.Getenv("BUCKET")
 	var lastModifiedKeyPrifix = os.Getenv("LASTMODIFIED_KEY_PRIFIX")
 	var buttonPrifix = os.Getenv("BUTTON_PREFIX")
@@ -60,9 +64,9 @@ func DefaultCommand(ctx context.Context, param SlashCommand, slackVerifiedToken 
 	})
 
 	// 最終
-	lastClicked, message, errlo := lib.GetLastButtonClicked(svc)
+	lastClicked, _, errlo := lib.GetLastButtonClicked(svc)
 	if errlo != nil {
-		return message, errlo
+		return nil, errlo
 	}
 
 	var usedCount = 0
@@ -82,14 +86,14 @@ func DefaultCommand(ctx context.Context, param SlashCommand, slackVerifiedToken 
 				switch aerr.Code() {
 				case s3.ErrCodeNoSuchBucket:
 					log.Print("bucket does not exist at GetObject")
-					return "bucket does not exist at GetObject", aerr
+					return nil, aerr
 
 				case s3.ErrCodeNoSuchKey:
 					// 新規作成
 					getSuccess = false
 				default:
 					log.Printf("aws error %v at GetObject", aerr.Error())
-					return "aws error at GetObject", aerr
+					return nil, aerr
 				}
 			}
 		}
@@ -105,7 +109,9 @@ func DefaultCommand(ctx context.Context, param SlashCommand, slackVerifiedToken 
 	defer log.Print("normal end")
 	msg := fmt.Sprintf("%d used / %d all", usedCount, buttonCount)
 	defer log.Print(msg)
-	return msg, nil
+	return &SlashCommandResponse{
+		Text: msg,
+	}, nil
 }
 
 func main() {

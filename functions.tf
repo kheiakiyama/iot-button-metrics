@@ -268,6 +268,12 @@ resource "aws_api_gateway_integration_response" "slack_command_post" {
     "method.response.header.Access-Control-Allow-Origin" = "'*'"
   }
 
+  response_templates {
+    "application/json" = <<EOF
+$input.json('$')    
+EOF
+  }
+
   depends_on = ["aws_api_gateway_method_response.slack_command_post"]
 }
 
